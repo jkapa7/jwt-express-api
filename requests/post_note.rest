@@ -1,8 +1,11 @@
 POST http://localhost:3001/api/notes
 Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0YzE4Y2JmOTQ1ODljM2MzMDg3MTFmNCIsInVzZXJuYW1lIjoianVhbiIsImlhdCI6MTY5MDQxMzE3OH0.1Y71ZzUwzQtrVlMVBG4kw2ZWnc_ri_TQRKOhktjAd0s
 
 {
-  "content": "Suscríbete a @midudev",
-  "important": true,
-  "userId": "604e7216d75e412367042758"
+  "content": "helloo",
+  "important": true
 }
+
+
+

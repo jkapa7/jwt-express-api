@@ -6,11 +6,13 @@ const Tracing = require("@sentry/tracing");
 const express = require("express");
 const app = express();
 const cors = require("cors");
-const Note = require("./models/Note");
 const notFound = require("./middleware/notFound.js");
 const handleErrors = require("./middleware/handleErrors.js");
 const usersRouter = require("./controllers/users");
+const loginRouter = require("./controllers/login");
 const User = require("./models/User");
+const jwt = require("jsonwebtoken");
+const Note = require("./models/Note");
 
 app.use(cors());
 app.use(express.json());
@@ -43,55 +45,32 @@ app.get("/", (request, response) => {
   response.send("<h1>Hello World!</h1>");
 });
 
-app.get("/api/notes", async (request, response) => {
-  const notes = await Note.find({}).populate("user", {
-    username: 1,
-    name: 1,
-  });
-  response.json(notes);
-});
-
-app.get("/api/notes/:id", (request, response, next) => {
-  const { id } = request.params;
-
-  Note.findById(id)
-    .then((note) => {
-      if (note) return response.json(note);
-      response.status(404).end();
-    })
-    .catch((err) => next(err));
-});
-
-app.put("/api/notes/:id", (request, response, next) => {
-  const { id } = request.params;
-  const note = request.body;
-
-  const newNoteInfo = {
-    content: note.content,
-    important: note.important,
-  };
-
-  Note.findByIdAndUpdate(id, newNoteInfo, { new: true })
-    .then((result) => {
-      response.json(result);
-    })
-    .catch(next);
-});
-
-app.delete("/api/notes/:id", async (request, response, next) => {
-  const { id } = request.params;
-  // const note = await Note.findById(id)
-  // if (!note) return response.sendStatus(404)
-
-  const res = await Note.findByIdAndDelete(id);
-  if (res === null) return response.sendStatus(404);
-
-  response.status(204).end();
-});
-
 app.post("/api/notes", async (request, response, next) => {
-  const { content, important = false, userId } = request.body;
+  const { content, important = false } = request.body;
 
+  //ME TRAIGO LA UTORIZACION DEL HEADER
+  const authorization = request.get("authorization");
+  let token = "";
+
+  //TOMO SOLO EL TOKEN
+  if (authorization && authorization.toLowerCase().startsWith("bearer")) {
+    token = authorization.substring(7);
+  }
+
+  let decodedToken = {};
+  //VERIFICO EL TOKEN
+  try {
+    decodedToken = jwt.verify(token, "1");
+  } catch (e) {
+    console.log(e);
+  }
+
+  //
+  if (!token || !decodedToken.id) {
+    return response.status(401).json({ error: "token missing or invalid" });
+  }
+
+  const { id: userId } = decodedToken;
   const user = await User.findById(userId);
 
   if (!content) {
@@ -107,10 +86,6 @@ app.post("/api/notes", async (request, response, next) => {
     user: user._id,
   });
 
-  // newNote.save().then(savedNote => {
-  //   response.json(savedNote)
-  // }).catch(err => next(err))
-
   try {
     const savedNote = await newNote.save();
 
@@ -124,6 +99,7 @@ app.post("/api/notes", async (request, response, next) => {
 });
 
 app.use("/api/users", usersRouter);
+app.use("/api/login", loginRouter);
 
 app.use(notFound);
 

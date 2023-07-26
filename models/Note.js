@@ -1,4 +1,4 @@
-const { Schema, model } = require('mongoose')
+const { Schema, model } = require("mongoose");
 
 const noteSchema = new Schema({
   content: String,
@@ -6,18 +6,18 @@ const noteSchema = new Schema({
   important: Boolean,
   user: {
     type: Schema.Types.ObjectId,
-    ref: 'User'
-  }
-})
+    ref: "User",
+  },
+});
 
-noteSchema.set('toJSON', {
+noteSchema.set("toJSON", {
   transform: (document, returnedObject) => {
-    returnedObject.id = returnedObject._id
-    delete returnedObject._id
-    delete returnedObject.__v
-  }
-})
+    returnedObject.id = returnedObject._id;
+    delete returnedObject._id;
+    delete returnedObject.__v;
+  },
+});
 
-const Note = model('Note', noteSchema)
+const Note = model("Note", noteSchema);
 
-module.exports = Note
+module.exports = Note;
